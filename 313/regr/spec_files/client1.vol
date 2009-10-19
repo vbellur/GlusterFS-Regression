@@ -1,0 +1,58 @@
+volume remote1
+  type protocol/client
+  option transport-type tcp
+  option remote-port 9350
+  option remote-host 127.0.0.1
+  option remote-subvolume brick
+end-volume
+
+volume remote2
+  type protocol/client
+  option transport-type tcp
+  option remote-port 9351
+  option remote-host 127.0.0.1
+  option remote-subvolume brick
+end-volume
+
+volume remote3
+  type protocol/client
+  option transport-type tcp
+  option remote-port 9352
+  option remote-host 127.0.0.1
+  option remote-subvolume brick
+end-volume
+
+volume remote4
+  type protocol/client
+  option transport-type tcp
+  option remote-port 9353
+  option remote-host 127.0.0.1
+  option remote-subvolume brick
+end-volume
+
+volume replicate1
+  type cluster/replicate
+  subvolumes remote1 remote2
+end-volume
+
+volume replicate2
+  type cluster/replicate
+  subvolumes remote3 remote4
+end-volume
+
+volume distribute
+  type cluster/distribute
+  subvolumes replicate1 replicate2
+end-volume
+
+volume writebehind
+  type performance/write-behind
+  option window-size 1MB
+  subvolumes distribute
+end-volume
+
+volume cache
+  type performance/io-cache
+  option cache-size 512MB
+  subvolumes writebehind
+end-volume

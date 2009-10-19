@@ -1,0 +1,48 @@
+#!/bin/bash
+
+description="# (313) rename is broken"
+comments="#when try to rename a file using mv it fails"
+
+version=$1
+bugid=$(pwd | cut -d '/' -f 4)
+
+exportdir=/jbod/regr/$bugid
+mountdir=/mnt/regr/$bugid/$version
+
+function ok () {
+  desc=$@
+  echo "ok - $desc"
+}
+
+function not_ok () {
+  desc=$@
+  echo "not ok - $desc"
+}
+
+
+function comment () {
+  desc=$@
+  echo "$desc"
+}
+
+[ $# -ne 1 ] && {
+  not_ok "#<Usage: $(basename $0) <glusterfs_version>"
+  exit 
+}
+
+/opt/qa/regr/setup $version $bugid
+
+sleep 10;
+
+touch $mountdir/client1/tmp1.txt
+mv $mountdir/client1/tmp1.txt $mountdir/client1/tmp2.txt 2> tmpfile
+
+if [ $(grep "Structure needs cleaning" tmpfile | wc -l) -ne 0 ];then
+    not_ok $description
+    comment $comments
+else 
+    ok $description
+fi
+
+rm tmpfile
+/opt/qa/regr/cleanup $version $bugid
