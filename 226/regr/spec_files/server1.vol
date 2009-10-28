@@ -1,0 +1,25 @@
+# file: /etc/glusterfs/glusterfs-server.vol
+volume posix
+  type storage/posix
+  option directory /jbod/regr/226/export1
+end-volume
+
+volume locks
+  type features/locks
+  subvolumes posix
+end-volume
+
+volume brick
+  type performance/io-threads
+  option thread-count 8
+  subvolumes locks
+end-volume
+
+volume server
+  type protocol/server
+  option transport-type tcp
+  option auth.addr.brick.allow *
+  option transport.socket.listen-port 1600
+  subvolumes brick
+end-volume
+
