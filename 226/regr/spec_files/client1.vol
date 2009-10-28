@@ -1,0 +1,34 @@
+# file: /etc/glusterfs/glusterfs-client.vol
+volume remote1
+  type protocol/client
+  option transport-type tcp
+  option remote-host 127.0.0.1
+  option transport.socket.remote-port 1500
+  option remote-subvolume brick
+end-volume
+
+volume remote2
+  type protocol/client
+  option transport-type tcp
+  option remote-host 127.0.0.1
+  option transport.socket.remote-port 1600
+  option remote-subvolume brick
+end-volume
+
+volume replicate
+  type cluster/replicate
+  subvolumes remote1 remote2
+end-volume
+
+volume writebehind
+  type performance/write-behind
+  option window-size 1MB
+  subvolumes replicate
+end-volume
+
+volume cache
+  type performance/io-cache
+  option cache-size 512MB
+  subvolumes writebehind
+end-volume
+
