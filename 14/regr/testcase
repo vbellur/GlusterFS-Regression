@@ -1,0 +1,46 @@
+#!/bin/bash
+
+description="#[ glusterfs 2.0.2 ] - No error logged on stdout/stderr upon missing mount point during client invocation"
+comments="#error should be displayed on the sreen"
+
+version=$1
+bugid=$(pwd | cut -d '/' -f 4)
+specdir=/share/tickets/$bugid/regr/spec_files
+logdir=/share/tickets/$bugid/regr/logs/$version
+GLUSTERFS=/opt/glusterfs/$version/sbin
+
+function ok () {
+  desc=$@
+  echo "ok - $desc"
+}
+
+function not_ok () {
+  desc=$@
+  echo "not ok - $desc"
+}
+
+
+function comment () {
+  desc=$@
+  echo "$desc"
+}
+
+[ $# -ne 1 ] && {
+  not_ok "#<Usage: $(basename $0) <glusterfs_version>"
+  exit 
+}
+
+/opt/qa/regr/setup $version $bugid --no-clients
+
+
+x=$($GLUSTERFS/glusterfs --run-id regr.c.$bugid -f $specdir/client1.vol -l $logdir/$(hostname)-client1.log | wc -l)
+if [ $x -ne 0 ]
+then
+       echo $x
+       ok $description 
+else
+       not_ok $description
+       comment $comments
+fi
+        
+/opt/qa/regr/cleanup $version $bugid

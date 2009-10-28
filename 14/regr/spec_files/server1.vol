@@ -1,0 +1,13 @@
+volume brick 
+  type storage/posix
+  option directory /jbod/regr/14/export1
+end-volume
+
+volume server
+  type protocol/server
+  option transport-type tcp
+  option listen-port 9310
+  option auth.addr.brick.allow *
+  subvolumes brick
+end-volume
+
