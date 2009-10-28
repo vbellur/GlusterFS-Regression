@@ -1,0 +1,54 @@
+#!/bin/bash
+
+description="#mkdir fails"
+comments="#mkdir after rm of regular file of same name fails"
+
+version=$1
+bugid=$(pwd | cut -d '/' -f 4)
+mountdir="/mnt/regr/$bugid/$version"
+specdir="/share/tickets/$bugid/regr/spec_files/"
+
+function ok () {
+  desc=$@
+  echo "ok - $desc"
+}
+
+function not_ok () {
+  desc=$@
+  echo "not ok - $desc"
+}
+
+
+function comment () {
+  desc=$@
+  echo "$desc"
+}
+
+[ $# -ne 1 ] && {
+  not_ok "#<Usage: $(basename $0) <glusterfs_version>"
+  exit 
+}
+
+/opt/qa/regr/setup $version $bugid --no-servers --no-clients
+
+if [ ! -f /sbin/mount.glusterfs-$version ]; then
+     sed -e 's/^\(\s*prefix=\)".*"/\1"\/opt\/glusterfs\/'$version'"/; s/^\(\s*cmd_line=.*\/sbin\/\).*/\1glusterfs");/' /sbin/mount.glusterfs > /sbin/mount.glusterfs-$version
+     chmod +x /sbin/mount.glusterfs-$version
+fi  
+
+cd $mountdir
+
+touch dot
+rm -rf dot
+mkdir dot 2> tmpfile
+
+if [ $(grep "File exists" tmpfile | wc -l) -ne 0 ];then
+  not_ok $description
+  comment $comments
+else    
+  ok $description
+fi
+
+rm tmpfile
+
+/opt/qa/regr/cleanup $version $bugid
