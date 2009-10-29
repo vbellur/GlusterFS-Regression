@@ -1,0 +1,28 @@
+volume remote1
+type protocol/client
+option transport-type tcp
+option remote-port 9350
+option remote-host 127.0.0.1
+option remote-subvolume brick
+end-volume
+
+volume remote2
+type protocol/client
+option transport-type tcp
+option remote-port 9351
+option remote-host 127.0.0.1
+option remote-subvolume brick
+end-volume
+
+volume cs
+type cluster/replicate
+subvolumes remote1 remote2
+end-volume
+
+volume cache
+type performance/io-cache
+option cache-size 512MB
+subvolumes cs
+end-volume
+
+

@@ -1,0 +1,23 @@
+volume posix
+type storage/posix
+option directory /jbod/regr/241/export2
+end-volume
+
+volume locks
+type features/locks
+subvolumes posix
+end-volume
+
+volume brick
+type performance/io-threads
+subvolumes locks
+end-volume
+
+volume server
+type protocol/server
+option transport-type tcp
+option listen-port 9351
+option auth.addr.brick.allow *
+subvolumes brick
+end-volume
+

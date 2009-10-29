@@ -1,0 +1,61 @@
+#!/bin/bash
+
+description="# (241) GlusterFS not honouring SETGID flag"
+comments="# setgid problem on glusterfs mount"
+
+version=$1
+bugid=$(pwd | cut -d '/' -f 4)
+
+exportdir=/jbod/regr/$bugid
+mountdir=/mnt/regr/$bugid/$version
+
+function ok () {
+  desc=$@
+  echo "ok - $desc"
+}
+
+function not_ok () {
+  desc=$@
+  echo "not ok - $desc"
+}
+
+
+function comment () {
+  desc=$@
+  echo "$desc"
+}
+
+[ $# -ne 1 ] && {
+  not_ok "#<Usage: $(basename $0) <glusterfs_version>"
+  exit 
+}
+
+
+/opt/qa/regr/setup $version $bugid
+
+sleep 5
+cd $mountdir/client1
+mkdir 1
+chgrp avahi 1
+chmod g+s 1
+var1=$(ls -ld 1 | cut -d " " -f 4)
+cd 1
+mkdir 2
+var2=$(ls -ld 2 | cut  -d " " -f 4)
+
+#echo $var1
+#echo $var2
+
+if [ $var1 = $var2 ];then
+	ok $description
+else
+	not_ok $description
+	comment $comments
+fi
+
+rmdir $mountdir/client1/1/2
+cd ..
+rmdir $mountdir/client1/1
+
+
+/opt/qa/regr/cleanup $version $bugid
