@@ -1,0 +1,44 @@
+#!/bin/bash
+
+description="# (131) provide a way to get the file location in clustered storage"
+comments="#doesn't have a mechanism to get the location of the file"
+
+version=$1
+bugid=$(pwd | cut -d '/' -f 4)
+
+exportdir=/jbod/regr/$bugid
+mountdir=/mnt/regr/$bugid/$version
+
+function ok () {
+  desc=$@
+  echo "ok - $desc"
+}
+
+function not_ok () {
+  desc=$@
+  echo "not ok - $desc"
+}
+
+
+function comment () {
+  desc=$@
+  echo "$desc"
+}
+
+[ $# -ne 1 ] && {
+  not_ok "#<Usage: $(basename $0) <glusterfs_version>"
+  exit 
+}
+
+
+/opt/qa/regr/setup $version $bugid
+
+sleep 5
+if [ $(getfattr -d -e hex -m "trusted.glusterfs.location" $mountdir/client1 2> /dev/null | wc -l) -ne 0 ];then
+	ok $description
+else
+	not_ok $desrciption
+	comment $comments
+fi
+
+/opt/qa/regr/cleanup $version $bugid
