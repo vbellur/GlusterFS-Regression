@@ -1,0 +1,111 @@
+/*
+  Copyright (c) 2006-2009 Gluster, Inc. <http://www.gluster.com>
+  This file is part of GlusterFS.
+
+  GlusterFS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published
+  by the Free Software Foundation; either version 3 of the License,
+  or (at your option) any later version.
+
+  GlusterFS is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see
+  <http://www.gnu.org/licenses/>.
+*/
+
+function ok () 
+{
+  desc=$@
+  echo $desc
+  echo "$BUGID: ok - $desc"
+}
+
+function not_ok () 
+{
+  desc=$@
+  echo "$BUGID: not ok - $desc"
+}
+
+[ $# -ne 1 ] && {
+  not_ok "#<Usage: $(basename $0) <complete_path_to_glusterfs>"
+  exit 
+}
+
+GLUSTERFS=$1
+
+VERSION_STR=`$GLUSTERFS --version`
+VERSION=`echo $VERSION_STR|cut -d " " -f 2`
+
+if [ "$VERSION" == "" ]
+then
+echo "Unable to determine version of $GLUSTERFS"
+exit 
+fi
+
+BUGID=$(pwd | xargs dirname | xargs basename)
+LOGDIR=$PWD/logs/$VERSION
+GLUSTERFSDIR=`dirname $GLUSTERFS`
+SPECDIR=$PWD/spec_files
+MOUNTDIR=$PWD/mnt
+EXPORTDIR=$PWD/export
+
+function replace_exportdir () 
+{
+  j=1
+  for i in `ls $SPECDIR/server*.vol`
+  do
+      cp -p $i $i.tmp
+      sed -i "s|option.*directory.*|option directory $EXPORTDIR/export$j|" $i
+      let "j += 1"
+  done
+}
+
+function revert_exportdir () 
+{
+  for i in `ls $SPECDIR/server*.vol`
+  do
+      mv $i.tmp $i
+  done
+}
+
+function comment () 
+{
+  desc=$@
+  echo "$desc"
+}
+
+function start_glusterfs () 
+{
+  args=$*
+  replace_exportdir
+  ../../setup $VERSION $BUGID  -E $EXPORTDIR -M $MOUNTDIR -G $GLUSTERFSDIR -L $LOGDIR -S $SPECDIR $args
+}
+
+function stop_glusterfs ()
+{
+# Kill the clients
+  for i in `ls -d $MOUNTDIR/client*`
+  do
+       sudo umount $i 2>/dev/null
+  done
+# Kill the servers later
+  sudo pkill -f "$glusterfs/glusterfsd --run-id regr-$BUGID-$VERSION-s"
+}
+
+function cleanup_dir ()
+{
+  rm -rf $EXPORTDIR
+  rm -rf `dirname $LOGDIR`
+  rm -rf $MOUNTDIR
+}
+
+function cleanup_glusterfs () 
+{
+  revert_exportdir
+  stop_glusterfs
+  cleanup_dir
+}

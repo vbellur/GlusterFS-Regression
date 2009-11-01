@@ -1,0 +1,316 @@
+#!/usr/bin/perl -w
+
+## use strict;
+use warnings;
+use File::Basename ();
+use Getopt::Long qw( GetOptions );
+use Switch;
+use File::Path;
+
+## Global variables
+use vars qw( %options %config );
+use vars qw( $_ME $_VERSION $_PACKAGE $_COPYRIGHT_YEARS $_BUG_ADDRESS);
+$_ME = File::Basename::basename ($0);
+$_VERSION = "0.0";
+$_PACKAGE = "Misc";
+$_COPYRIGHT_YEARS = "2009";
+$_BUG_ADDRESS = "glusterfs-qa\@zresearch.com";
+
+$SIG{__WARN__} = sub { my_warn (@_) };
+
+use constant { TRUE => 1, FALSE => 0 };
+
+## Default option (templates)
+my %defaults = (
+            'specdir'       => 'sprintf "/share/tickets/$bugid/regr/spec_files"',
+            'logdir'        => 'sprintf "/share/tickets/$bugid/regr/logs/$version"',
+            'mountdir'      => 'sprintf "/mnt/regr/$bugid/$version"',
+            'glusterfsdir'  => 'sprintf "/opt/glusterfs/$version/sbin"',
+            'exportdir'     => 'sprintf "/jbod/regr/$bugid"',
+           );
+
+%options = (
+            'dry-run'       => FALSE,
+            'exports'       => TRUE,
+            'mountpoints'   => TRUE,
+            'servers'       => TRUE,
+            'clients'       => TRUE,
+           );
+
+sub help () {
+    print <<"__HELP__";
+Usage: $_ME [OPTION]... [FILE]...
+<DESCRIPTION>
+
+Mandatory arguments to long options are mandatory for short options too.
+
+      --dry-run             do not do anything
+      --no-servers          do not do start servers
+      --no-clients          do not do start clients
+      --no-exports          do not do create export directories
+      --no-mountpoints      do not do create mount points
+
+  -E, --exportdir=DIR       export directory for servers
+  -G, --glusterfsdir=DIR    glusterfs sbin directory
+  -L, --logdir=DIR          log file directory
+  -M, --mountdir=DIR        mount point base
+  -S, --specdir=DIR         spec file directory
+
+  -q, --quiet               supress all output
+
+      --help        display this help and exit
+      --version     output version information and exit
+
+<CAVEATS>
+
+<RETURN VALUES>
+
+Report bugs to <$_BUG_ADDRESS>.
+__HELP__
+    quit (0);
+}
+
+Getopt::Long::Configure qw( gnu_getopt no_ignore_case );
+
+sub help ();
+sub usage ();
+sub version ();
+sub error (@);
+sub my_warn (@);
+sub quit ($);
+sub init ();
+sub main ();
+
+
+
+my $hostname = $ENV{HOSTNAME} || `hostname` or error "Unable to obtain hostname";
+chomp ($hostname);
+init () and quit (main ());
+
+
+## ----------------------------- Subroutines begin -----------------------------
+
+sub parse_args () {
+    GetOptions (\%options,
+                "specdir|spec-dir|S=s",
+                "logdir|log-dir|L=s",
+                "mountdir|mount-dir|M=s",
+                "glusterfsdir|glusterfs-dir|G=s",
+                "exportdir|export-dir|E=s",
+                "servers!",
+                "clients!",
+                "exports!",
+                "mountpoints!",
+                "quiet|q",
+                "help|h|?",
+                "version|V",
+                "dry-run!",
+               ) or usage ();
+
+    help () and return 0 if $options{help};
+    version () and return 0 if $options{version};
+
+    if (scalar @ARGV != 2) {
+        my_warn "Arguments expected";
+        usage ();
+    }
+
+    return 1;
+}
+
+sub quit ($) {
+    exit shift;
+}
+
+sub my_warn (@) {
+    print STDERR "$_ME: @_\n";
+}
+
+sub error (@) {
+    print STDERR "$_ME: @_\n";
+    quit (1);
+}
+
+sub version () {
+    print <<__VERSION__;
+$_ME ($_PACKAGE) $_VERSION
+Written by Gururaj K.
+
+Copyright (C) $_COPYRIGHT_YEARS Gururaj K.
+__VERSION__
+    quit (0);
+}
+
+sub usage () {
+    print STDERR <<"__USAGE__";
+Usage: $_ME [options]
+Try `$_ME --help' for more information.
+__USAGE__
+    quit (1);
+}
+
+
+sub init () {
+    parse_args () or return;
+}
+
+sub make_logdir ($$) {
+    my ($version, $bugid) = @_;
+    $options{'logdir'} ||= eval $defaults{'logdir'};
+    if ($options{'dry-run'} == TRUE) {
+        printf "%-60s%s\n", "mkdir $options{logdir}", "# Create log directory";
+    }
+    else {
+        File::Path::mkpath ("$options{logdir}")
+            or
+        my_warn "$options{logdir}: Error creating logdir" and return
+            if not -d $options{logdir};
+    }
+    return TRUE;
+}
+
+sub make_mount_base ($$) {
+    my ($version, $bugid) = @_;
+    $options{'mountdir'} ||= eval $defaults{'mountdir'};
+    if ($options{'dry-run'} == TRUE) {
+        printf "%-60s%s\n", "mkdir $options{mountdir}", "# Create mount base";
+    } else {
+        File::Path::mkpath ("$options{mountdir}")
+            or
+        my_warn "$options{mountdir}: Error creating mountpoint base" and return
+            if not -d $options{mountdir};
+    }
+    return TRUE;
+}
+
+sub is_number ($$) {
+    my ($num, $type) = @_;
+    switch ($type) {
+        case /natural/i     { return if not $num =~ m/^\d+$/ or $num == 0 }
+        case /whole/i       { return if not m/^\d+$/ }
+        case /integer/i     { return if not m/^\-?\d+$/ }
+    }
+    return TRUE;
+}
+
+sub process_clients ($$) {
+    my ($version, $bugid) = @_;
+
+    $options{exportdir} ||= eval $defaults{exportdir};
+
+    $options{specdir} ||= eval $defaults{specdir};
+    my_warn "$options{specdir}: Invalid bug-id" and return if not -d $options{specdir};
+
+    foreach my $specfile (<$options{specdir}/client*.vol>) {
+        ## Force use of filename convention
+        next if $specfile !~ m#.*client(\d+)\.vol#;
+        my $index = $1;
+        my $mountpoint = "$options{mountdir}/client$index";
+
+        if ($options{mountpoints}) {
+            if ($options{'dry-run'} == TRUE) {
+                printf "%-60s%s\n", "mkdir $mountpoint", "# Create mount point for client$index";
+            }
+            else {
+		if (not -d $mountpoint) {
+		    File::Path::mkpath ($mountpoint) 
+		      #or 
+       #        my_warn "$mountpoint: Error creating mount point" and return;
+                }
+            }
+        }
+
+        if ($options{clients}) {
+            my $command = "$options{glusterfsdir}/glusterfs" .
+                          " --run-id regr-$bugid-$version-c$index" .
+                          " -f $specfile" .
+                          " -l $options{logdir}/$hostname-client$index.log" .
+                          " $mountpoint";
+            if ($options{'dry-run'} == TRUE) {
+                print "# Starting client$index\n";
+                printf "$command\n";
+            }
+            else {
+                system "$command";
+            }
+        }
+    }
+}
+
+
+sub process_servers ($$) {
+    my ($version, $bugid) = @_;
+
+    $options{exportdir} ||= eval $defaults{exportdir};
+
+    $options{specdir} ||= eval $defaults{specdir};
+
+    foreach my $specfile (<$options{specdir}/server*.vol>) {
+        ## Force use of filename convention
+        next if $specfile !~ m#.*server(\d+)\.vol#;
+        my $index = $1;
+
+        open S, "<", $specfile or error "$specfile: Error opening server spec file\n";
+        my @exports = map { chomp; s/.*directory\s+//; $_ } grep { /^\s*option\s+directory\s+/ } <S>;
+        close S;
+
+        foreach (@exports) {
+            error "$specfile: $_: Non standard export directory (Should be in $options{exportdir})" unless m/^$options{exportdir}/;
+            if ($options{exports}) {
+                if ($options{'dry-run'} == TRUE) {
+                    printf "%-60s%s\n", "mkdir $_", "# Create export directory for Server $index";
+                }
+                elsif (not -d $_) {
+                        File::Path::mkpath ($_) or
+                            error "$options{exportdir}: Error creating mountpoint base" and return;
+                }
+            }
+        }
+        if ($options{servers}) {
+            my $command = "$options{glusterfsdir}/glusterfsd --run-id regr-$bugid-$version-s$index -f $specfile -l $options{logdir}/$hostname-server$index.log";
+#print "Server command: $command\n";
+            if ($options{'dry-run'} == TRUE) {
+                print "# Starting server$index\n";
+                printf "$command\n";
+            }
+            else {
+                system "$command";
+            }
+        }
+    } # Foreach server spec file
+}
+
+sub check_for_running ($$$) {
+    my ($type, $version, $bugid) = @_;
+
+    if ($type eq "server") {
+    }
+    elsif ($type eq "client") {
+    }
+    return TRUE;
+}
+
+
+sub main () {
+    my $version = $ARGV[0];
+    my $bugid = $ARGV[1];
+
+    $options{specdir} ||= eval $defaults{specdir};
+    die "$options{specdir}: Spec File directory not found\n" if not -d $options{specdir};
+
+    #$options{glusterfsdir} ||= eval $defaults{glusterfsdir};
+    #error "$options{glusterfsdir}: No binary found\n" if not -x "$options{glusterfsdir}/glusterfsd";
+
+    is_number ($bugid, "natural") or error "$bugid: Invalid input. Expecting a natural number\n";
+
+    make_logdir ($version, $bugid);
+    make_mount_base ($version, $bugid);
+
+    check_for_running ("servers", $version, $bugid) or error "Servers already running\n";
+    process_servers ($version, $bugid);
+    check_for_running ("clients", $version, $bugid) or error "Clients already running\n";
+    process_clients ($version, $bugid);
+
+    return 1;
+}
+
