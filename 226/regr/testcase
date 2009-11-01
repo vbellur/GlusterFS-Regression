@@ -3,40 +3,17 @@
 description="#mkdir fails"
 comments="#mkdir after rm of regular file of same name fails"
 
-version=$1
-bugid=$(pwd | cut -d '/' -f 4)
-mountdir="/mnt/regr/$bugid/$version"
-specdir="/share/tickets/$bugid/regr/spec_files/"
+source ../../init
 
-function ok () {
-  desc=$@
-  echo "ok - $desc"
-}
+start_glusterfs --no-servers --no-clients
 
-function not_ok () {
-  desc=$@
-  echo "not ok - $desc"
-}
-
-
-function comment () {
-  desc=$@
-  echo "$desc"
-}
-
-[ $# -ne 1 ] && {
-  not_ok "#<Usage: $(basename $0) <glusterfs_version>"
-  exit 
-}
-
-/opt/qa/regr/setup $version $bugid --no-servers --no-clients
-
-if [ ! -f /sbin/mount.glusterfs-$version ]; then
-     sed -e 's/^\(\s*prefix=\)".*"/\1"\/opt\/glusterfs\/'$version'"/; s/^\(\s*cmd_line=.*\/sbin\/\).*/\1glusterfs");/' /sbin/mount.glusterfs > /sbin/mount.glusterfs-$version
-     chmod +x /sbin/mount.glusterfs-$version
+## Testcase START
+if [ ! -f /sbin/mount.glusterfs-$VERSION ]; then
+     sed -e 's/^\(\s*prefix=\)".*"/\1"\/opt\/glusterfs\/'$VERSION'"/; s/^\(\s*cmd_line=.*\/sbin\/\).*/\1glusterfs");/' /sbin/mount.glusterfs > /sbin/mount.glusterfs-$VERSION
+     chmod +x /sbin/mount.glusterfs-$VERSION
 fi  
 
-cd $mountdir
+cd $MOUNTDIR
 
 touch dot
 rm -rf dot
@@ -50,5 +27,6 @@ else
 fi
 
 rm tmpfile
+## Testcase End
 
-/opt/qa/regr/cleanup $version $bugid
+cleanup_glusterfs
