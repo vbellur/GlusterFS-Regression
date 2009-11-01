@@ -1,49 +1,14 @@
 #!/bin/bash
 
-bugid=$(pwd | cut -d '/' -f 4)
+source ../../init
+start_glusterfs
 
-description="#( $bugid ) description of the bug from bugzilla"
-comments="#any comment about the bug"
+#testcase starts here
 
-version=$1
+#This is my testcase
 
+#testcase ends here
 
-mountdir=/mnt/regr/$bugid/$version
-
-function ok () {
-  desc=$@
-  echo "ok - $desc"
-}
-
-function not_ok () {
-  desc=$@
-  echo "not ok - $desc"
-}
-
-
-function comment () {
-  desc=$@
-  echo "$desc"
-}
-
-[ $# -ne 1 ] && {
-  not_ok "#<Usage: $(basename $0) <glusterfs_version>"
-  exit 
-}
-
-/opt/qa/regr/setup $version $bugid
-
-#testcase here
-
-sleep 5
-
-if [ $(mount | grep "$mountdir/client1" | wc -l) -ne 0 ];then
-        not_ok $description
-        comment $comments
-else
-    ok $description
-fi
-
-/opt/qa/regr/cleanup $version $bugid
+cleanup_glusterfs
 
 
