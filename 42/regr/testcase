@@ -1,0 +1,20 @@
+#!/bin/bash
+
+bugid=$(pwd | cut -d '/' -f 4)
+
+description="# ($bugid) auth.login and auth.addr cannot be used in conjunction with each other"
+comments="# It is addr only authentication when both login & addr are both specified"
+
+source ../../init
+start_glusterfs
+
+sleep 5
+
+if [ $(mount | grep "$MOUNTDIR/client1" | wc -l) -ne 0 ];then
+	not_ok $description
+	comment $comments
+else
+ 	ok $description
+fi
+
+cleanup_glusterfs
