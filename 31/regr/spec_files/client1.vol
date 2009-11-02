@@ -1,0 +1,44 @@
+volume nwtnhqfarm24.brick
+  type protocol/client
+  option transport-type tcp/client
+  option remote-host 127.0.0.1
+  option remote-port 9326
+  option remote-subvolume brick
+end-volume
+
+volume grnlfarm24.brick
+  type protocol/client
+  option transport-type tcp/client
+  option remote-host 127.0.0.1
+  option remote-port 9326
+  option remote-subvolume brick
+end-volume
+
+volume afr24
+  type cluster/afr
+  subvolumes nwtnhqfarm24.brick grnlfarm24.brick
+end-volume
+
+ ## Add writeback feature                                                      
+volume write-behind_afr24
+  type performance/write-behind
+  option cache-size 3MB
+  option flush-behind on
+  subvolumes afr24
+end-volume
+
+  ### Add IO-Cache feature                                                      
+volume iocache_afr24
+  type performance/io-cache
+  option cache-size 64MB             # default is 32MB                          
+  option page-size 1MB               #128KB is default option                   
+  option force-revalidate-timeout 2  # default is 1                             
+  subvolumes write-behind_afr24
+end-volume
+
+  ### Add readahead feature                                                     
+volume readahead_afr24
+  type performance/read-ahead
+  option page-count 16
+  subvolumes iocache_afr24
+end-volume

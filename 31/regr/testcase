@@ -1,0 +1,20 @@
+#!/bin/bash
+
+description="# glusterfs server crash on trying to copy a file to glusterfs mount"
+comments="# cp -fv filename mountpoint"
+
+source ../../init
+
+start_glusterfs
+
+sleep 5
+
+cp -fv /etc/shadow $MOUNTDIR/client1 > /dev/null
+if [ $(ls $EXPORTDIR/export2 | wc -l) -ne 0 ];then
+	ok $description
+else
+	not_ok $description
+	comment $comments
+fi
+
+cleanup_glusterfs
