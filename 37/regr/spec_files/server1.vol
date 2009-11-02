@@ -1,0 +1,13 @@
+volume brick
+        type storage/posix
+        option directory /jbod/regr/37/export1
+end-volume
+
+volume server
+        type protocol/server
+        option transport-type tcp/server
+        option listen-port 9328
+        subvolumes brick
+        option auth.addr.brick.allow 127.0.0.1
+end-volume
+
