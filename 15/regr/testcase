@@ -1,0 +1,20 @@
+#!/bin/bash
+
+description="# [ glusterfs 2.0.2 ] - Unclear log message with missing mount point (during client invocation)"
+comments="# dangling volume is printed in the log"
+
+source ../../init
+
+start_glusterfs --no-clients
+
+$($GLUSTERFS --run-id regr.c.$BUGID -f $SPECDIR/client1.vol -l $LOGDIR/$(hostname)-client1.log)
+
+if [ $(grep "Volume is dangling" $LOGDIR/$(hostname)-client1.log | wc -l) -ne 0 ]
+then
+        not_ok $description
+        comment $comments
+else
+        ok $description
+fi
+        
+cleanup_glusterfs
