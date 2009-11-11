@@ -1,0 +1,18 @@
+#!/bin/bash
+
+description="# (5) mount.glusterfs script does not support TRACE log level"
+comments="#TRACE log level"
+
+source ../../init
+
+start_glusterfs --no-clients
+
+if [ $(mount -t glusterfs-$VERSION -o defaults,noatime,nodiratime,log-file=$LOGDIR/$(hostname)-client1.log,log-level=TRACE $SPECDIR/client1.vol $MOUNTDIR/client1 | wc -l) -ne 0 ]
+then
+        not_ok $description
+        comment $comments 
+else
+        ok $description
+fi
+
+cleanup_glusterfs

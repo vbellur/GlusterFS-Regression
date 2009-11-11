@@ -1,0 +1,10 @@
+volume remote1
+         type protocol/client
+         option transport-type socket
+         option address-family inet
+         option remote-host 127.0.0.1
+         option remote-port 9302 
+         option remote-subvolume brick
+end-volume
+
+
