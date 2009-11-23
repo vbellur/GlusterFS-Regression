@@ -1,0 +1,19 @@
+#!/bin/bash
+
+description="# (113) mkdir fails on stripe configuration"
+comments="# Simple stripe setup is used."
+
+source ../../init
+
+start_glusterfs
+
+sleep 5
+
+if [ $(mkdir $MOUNTDIR/client1/1 | grep "Software caused connection abort" | wc -l) -ne 0 ];then
+                not_ok $description
+                comment $comments
+else
+    ok $description
+fi
+
+cleanup_glusterfs
