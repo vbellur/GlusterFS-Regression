@@ -1,0 +1,8 @@
+volume remote1
+  type protocol/client
+  option transport-type tcp/client
+  option remote-port 9355
+  option remote-host 127.0.0.1
+  option remote-subvolume brick
+end-volume
+
