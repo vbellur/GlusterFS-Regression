@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+#  Copyright (c) 2006-2009 Gluster, Inc. <http://www.gluster.com>
+#  This file is part of GlusterFS.
+#
+#  GlusterFS is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published
+#  by the Free Software Foundation; either version 3 of the License,
+#  or (at your option) any later version.
+#
+#  GlusterFS is distributed in the hope that it will be useful, but
+#  WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see
+#  <http://www.gnu.org/licenses/>.
+
+description="# (309) In replicate set-up when exnihilate.sh is run , client crashes"
+comments="In replicate set-up when exnihilate.sh is run , client crashes"
+
+source ../../init
+
+start_glusterfs
+
+touch $MOUNTDIR/client1/dot 2> ERROR_MSG
+
+cat ERROR_MSG
+
+if [ $( cat ERROR_MSG | grep 'transport endpoint not connected' | wc -l) -ne 0 ] 
+then
+        not_ok $description
+        comment $comments 
+else
+        ok $description
+fi
+
+rm -f ERROR_MSG
+cleanup_glusterfs
