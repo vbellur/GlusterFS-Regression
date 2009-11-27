@@ -1,0 +1,33 @@
+#!/bin/bash
+
+description="# Crash in replicate getxattr "
+comments="# When setfattr and getfattr on a set of files are being done simultaneously then whenever getfattr is done on a file not present then the client crashes "
+
+source ../../init
+
+start_glusterfs 
+
+sleep 5
+
+
+cd $MOUNTDIR/client1
+
+$SPECDIR/ss.sh 2> $SPECDIR/tmpfile
+if [ $(grep "Transport endpoint is not connected" $SPECDIR/tmpfile | wc -l) -ne 0  ]; then
+    not_ok $description
+    comment $comments
+else
+    ok $description
+    comment $comments
+fi
+
+cd -
+
+rm $SPECDIR/tmpfile
+
+cleanup_glusterfs
+
+if [ $(mount | grep "$MOUNTDIR/client1" | wc -l) -ne 0 ]; then
+    umount $MOUNTDIR/client1
+    rm -r $MOUNTDIR
+fi

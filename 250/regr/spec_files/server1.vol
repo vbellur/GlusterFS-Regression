@@ -1,0 +1,34 @@
+### 'NOTE'
+# This file has both server spec and client spec to get an understanding of stripe's spec file. Hence can't be used as it is, as a GlusterFS spec file. 
+# One need to seperate out server spec and client spec to get it working.
+
+#=========================================================================
+
+# **** server1 spec file ****
+
+### Export volume "brick" with the contents of "/home/export" directory.
+volume posix1
+  type storage/posix                    # POSIX FS translator
+  option directory /root/regression/250/regr/export/export1
+end-volume
+
+### Add POSIX record locking support to the storage brick
+volume brick1
+  type features/posix-locks 
+  option mandatory on          # enables mandatory locking on all files
+  subvolumes posix1
+end-volume
+
+### Add network serving capability to above brick.
+volume server
+  type protocol/server
+  option transport-type tcp                      # For TCP/IP transport
+  option transport.socket.listen-port 7001       # Default is 6996
+# option transport.socket.nodelay on
+# option client-volume-filename /etc/glusterfs/glusterfs-client.vol
+  subvolumes brick1
+  option auth.addr.brick1.allow * 		# access to "brick" volume
+end-volume
+
+
+#=========================================================================
