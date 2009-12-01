@@ -17,18 +17,28 @@
 #  <http://www.gnu.org/licenses/>.
 #
 set -u
+DESC=0
 
 function ok () 
 {
   desc=$@
-  echo $desc
-  echo "$BUGID: ok - $desc"
+  if [ $DESC -ne "0" ] 
+  then
+        echo "$BUGID: ok - $desc"
+  else
+        echo "$BUGID: ok"
+  fi
 }
 
 function not_ok () 
 {
   desc=$@
-  echo "$BUGID: not ok - $desc"
+  if [ $DESC -ne "0" ]
+  then
+        echo "$BUGID: not ok - $desc"
+  else
+        echo "$BUGID: not ok"
+  fi
 }
 
 [ $# -ne 1 ] && {
