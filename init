@@ -16,6 +16,7 @@
 #  along with this program.  If not, see
 #  <http://www.gnu.org/licenses/>.
 #
+set -u
 
 function ok () 
 {
@@ -47,6 +48,7 @@ exit
 fi
 
 BUGID=$(pwd | xargs dirname | xargs basename)
+STARTDIR=$(pwd)
 LOGDIR=$PWD/logs/$VERSION
 GLUSTERFSDIR=`dirname $GLUSTERFS`
 SPECDIR=$PWD/spec_files
@@ -87,13 +89,14 @@ function start_glusterfs ()
 
 function stop_glusterfs ()
 {
+  cd $STARTDIR
 # Kill the clients
   for i in `ls -d $MOUNTDIR/client*`
   do
        sudo umount $i 2>/dev/null
   done
 # Kill the servers later
-  sudo pkill -f "$glusterfs/glusterfsd --run-id regr-$BUGID-$VERSION-s"
+  sudo pkill -f "$GLUSTERFSDIR/glusterfsd --run-id regr-$BUGID-$VERSION-s"
 }
 
 function cleanup_dir ()
