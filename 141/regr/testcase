@@ -1,0 +1,18 @@
+#!/bin/bash
+
+description="# (141) GF_OPTION_TYPE_PATH should check for presence of ".." in path"
+comments="#Should return EINVAL if ".." is found"
+
+source ../../init
+
+start_glusterfs --no-clients
+
+if [ $(grep "invalid path given" $LOGDIR/$(hostname)-server1.log | wc -l) -ne 0 ];then
+    ok $description
+else
+    not_ok $description
+    comment $comments
+fi
+
+cleanup_glusterfs
+
