@@ -1,0 +1,42 @@
+volume posix0
+type storage/posix
+option directory /root/regression/260/regr/export/export1
+end-volume
+
+volume lock0
+type features/locks
+subvolumes posix0
+end-volume
+
+volume brick0
+type performance/io-threads
+option thread-count 2
+subvolumes lock0
+end-volume
+
+volume posix1
+type storage/posix
+option directory /root/regression/260/regr/export/export1
+end-volume
+
+volume lock1
+type features/locks
+subvolumes posix1
+end-volume
+
+volume brick1
+type performance/io-threads
+option thread-count 2
+subvolumes lock1
+end-volume
+
+volume server
+type protocol/server
+option transport-type tcp
+option transport.socket.listen-port 6999
+option auth.addr.brick0.allow *
+option auth.addr.brick1.allow *
+subvolumes brick0 brick1
+end-volume
+
+

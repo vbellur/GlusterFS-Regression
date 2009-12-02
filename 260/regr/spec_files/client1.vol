@@ -1,0 +1,38 @@
+volume brick-0-0-0
+type protocol/client
+option transport-type tcp
+option remote-host 127.0.0.1
+option remote-port 6999
+option remote-subvolume brick0
+end-volume
+
+volume rep-0-0
+type cluster/replicate
+subvolumes brick-0-0-0
+end-volume
+
+volume brick-0-1-0
+type protocol/client
+option transport-type tcp
+option remote-host 127.0.0.1
+option remote-port 6999
+option remote-subvolume brick1
+end-volume
+
+volume rep-0-1
+type cluster/replicate
+subvolumes brick-0-1-0
+end-volume
+
+volume union
+type cluster/distribute
+subvolumes rep-0-0 rep-0-1
+end-volume
+
+volume client
+type performance/write-behind
+option cache-size 64MB
+option flush-behind on
+subvolumes union
+end-volume
+
