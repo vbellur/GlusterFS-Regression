@@ -1,0 +1,32 @@
+# **** server2 spec file ****
+volume posix2
+  type storage/posix                    # POSIX FS translator
+  option directory /root/regression/266/regr/export/export2
+end-volume
+
+volume error2
+  type debug/error-gen
+  option error-no ENOSPC
+  subvolumes posix2
+end-volume
+
+### Add POSIX record locking support to the storage brick
+volume brick2
+  type features/posix-locks
+  option mandatory on          # enables mandatory locking on all files
+  subvolumes error2
+end-volume
+
+### Add network serving capability to above brick.
+volume server
+  type protocol/server
+  option transport-type tcp     # For TCP/IP transport
+  option transport.socket.listen-port 7002              # Default is 6996
+  option transport.socket.nodelay on
+  subvolumes brick2
+  option auth.addr.brick2.allow * # Allow access to "brick" volume
+end-volume
+
+
+#=========================================================================
+
