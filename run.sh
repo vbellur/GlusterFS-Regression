@@ -20,6 +20,12 @@
 GLUSTERFS=$1
 OLDDIR=`pwd`
 
+if [ 1 -ne $# ]
+then
+        echo "Usage: run.sh <path_to_glusterfs_binary>"
+        return;
+fi
+
 for i in `ls | grep "^[0-9]*$"|sort -n`
 do
    cd $i/regr
