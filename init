@@ -18,6 +18,7 @@
 #
 set -u
 DESC=0
+BUGID=$(pwd | xargs dirname | xargs basename)
 
 function ok () 
 {
@@ -57,7 +58,6 @@ echo "Unable to determine version of $GLUSTERFS"
 exit 
 fi
 
-BUGID=$(pwd | xargs dirname | xargs basename)
 STARTDIR=$(pwd)
 LOGDIR=$PWD/logs/$VERSION
 GLUSTERFSDIR=`dirname $GLUSTERFS`
@@ -87,7 +87,10 @@ function revert_exportdir ()
 function comment () 
 {
   desc=$@
-  echo "$desc"
+  if [ $DESC -ne "0" ]
+  then
+        echo "$desc"
+  fi
 }
 
 function start_glusterfs () 
@@ -101,9 +104,10 @@ function stop_glusterfs ()
 {
   cd $STARTDIR
 # Kill the clients
-  for i in `ls -d $MOUNTDIR/client*`
+  sudo pkill -f "$GLUSTERFSDIR/glusterfs --run-id regr-$BUGID-$VERSION-c" 2>/dev/null
+  for i in `ls  $MOUNTDIR/ 2>/dev/null`
   do
-       sudo umount $i 2>/dev/null
+        sudo umount $MOUNTDIR/$i 1>&2 2>/dev/null
   done
 # Kill the servers later
   sudo pkill -f "$GLUSTERFSDIR/glusterfsd --run-id regr-$BUGID-$VERSION-s"
