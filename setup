@@ -134,9 +134,9 @@ sub error (@) {
 sub version () {
     print <<__VERSION__;
 $_ME ($_PACKAGE) $_VERSION
-Written by Gururaj K.
+Written by GlusterFS development team.
 
-Copyright (C) $_COPYRIGHT_YEARS Gururaj K.
+Copyright (C) $_COPYRIGHT_YEARS GlusterFS development team.
 __VERSION__
     quit (0);
 }

@@ -28,7 +28,7 @@ sleep 5
 if [ $(getfattr -d -e hex -m "trusted.glusterfs.content" $MOUNTDIR/client1 2> /dev/null | wc -l) -ne 0 ];then
 	ok $description
 else
-	not_ok $desrciption
+	not_ok $description
 	comment $comments
 fi
 
