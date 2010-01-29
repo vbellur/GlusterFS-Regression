@@ -1,0 +1,37 @@
+volume remote1
+  type protocol/client
+  option transport-type tcp
+  option remote-host 127.0.0.1
+  option remote-port 1500
+  option remote-subvolume brick
+end-volume
+
+
+volume remote2
+  type protocol/client
+  option transport-type tcp
+  option remote-host 127.0.0.1
+  option remote-port 1600
+  option remote-subvolume brick
+end-volume
+
+volume remote3
+  type protocol/client
+  option transport-type tcp
+  option remote-host 127.0.0.1
+  option remote-port 1700
+  option remote-subvolume brick
+end-volume
+
+volume remote4
+  type protocol/client
+  option transport-type tcp
+  option remote-host 127.0.0.1
+  option remote-port 1800
+  option remote-subvolume brick
+end-volume
+
+volume replicate
+  type cluster/replicate
+  subvolumes remote1 remote2 remote3 remote4
+end-volume
