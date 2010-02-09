@@ -24,8 +24,8 @@ source ../../init
 
 start_glusterfs
 
-mkdir -p test
-ln -s test/nonex test/abs
+mkdir -p $MOUNTDIR/client1/test
+ln -s $MOUNTDIR/client1/test/nonex $MOUNTDIR/client1/test/abs
 
 
 if [ $( find . -type l | wc -l ) -eq 0 ]
@@ -36,6 +36,6 @@ else
     ok $description
 fi
 
-rm -rf  test
+rm -rf  $MOUNTDIR/client1/test
 
 cleanup_glusterfs
