@@ -1,0 +1,35 @@
+#!/bin/bash
+
+description="#  Bug 547 -  write-behind enable-trickling-writes working"
+comments="# size and time are not changed at all, regardless of whether enable-trickling-writes is on or off. "
+
+
+source ../../init
+
+start_glusterfs 
+
+sleep 2
+n=1; (while [ $n -lt 23421 ]; do echo -n i; ((n+=1)) ; done) > $MOUNTDIR/client1/testing.txt &
+
+filesize1=$(stat -c '%s' $EXPORTDIR/export1/testing.txt)
+sleep 1
+filesize2=$(stat -c '%s' $EXPORTDIR/export2/testing.txt)
+sleep 1
+filesize3=$(stat -c '%s' $EXPORTDIR/export1/testing.txt)
+
+if [ $filesize1 -ne $filesize2 ] && [ $filesize2 -ne $filesize3 ]
+then
+ ok $description
+        comment $comments
+
+else
+ not_ok $description
+        comment $comments
+
+fi
+
+sleep 20
+
+rm $MOUNTDIR/client1/testing.txt >/dev/null
+cleanup_glusterfs
+
