@@ -1,0 +1,33 @@
+#!/bin/bash
+
+description="# Write-behind at serverside causes data corruption"
+comments="# Write-behind translator loaded in server volfile causes data corruption"
+
+
+source ../../init
+
+start_glusterfs 
+
+sleep 2
+
+cd $MOUNTDIR/client1 
+dd if=/dev/urandom of=$MOUNTDIR/random bs=1M count=10  2>1 1>/dev/null
+dd if=$MOUNTDIR/random of=$MOUNTDIR/client1/random bs=1M count=10 2>1 1>/dev/null
+gfs_md5sum=$(md5sum $MOUNTDIR/client1/random | cut -f 1 -d" ")
+other_md5sum=$(md5sum $MOUNTDIR/random | cut -f 1 -d" ")
+
+if [ $gfs_md5sum == $other_md5sum ] ; then
+    ok $description
+    comment $comments
+else
+    not_ok $description
+    comment $comments
+fi
+
+rm $MOUNTDIR/random >/dev/null
+rm $MOUNTDIR/client1/random >/dev/null
+
+cd - >/dev/null
+
+cleanup_glusterfs
+

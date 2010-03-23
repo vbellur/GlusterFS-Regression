@@ -1,0 +1,38 @@
+volume posix1
+  type storage/posix                    
+  option directory /home/raghu/work/git.regression/639/regr/export/export1
+end-volume
+
+
+volume locks
+  type features/posix-locks
+  subvolumes posix1
+end-volume
+
+volume iot
+ type performance/io-threads
+ option thread-count 8
+ subvolumes locks
+end-volume
+
+volume writebehind
+ type performance/write-behind
+ option cache-size 4MB
+ subvolumes iot
+end-volume
+
+volume brick1
+   type performance/read-ahead
+  option page-count 4          
+  option force-atime-update off 
+  subvolumes writebehind
+end-volume
+
+volume server
+  type protocol/server
+  option transport-type tcp                     
+  option transport.socket.listen-port 7777
+  subvolumes brick1
+  option auth.addr.brick1.allow *              
+end-volume
+
