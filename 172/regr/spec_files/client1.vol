@@ -1,0 +1,68 @@
+volume remote1
+  type protocol/client
+  option transport-type tcp/client
+  option remote-port 9352
+  option remote-host 127.0.0.1
+  option remote-subvolume brick
+end-volume
+
+volume remote2
+  type protocol/client
+  option transport-type tcp/client
+  option remote-port 9353
+  option remote-host 127.0.0.1
+  option remote-subvolume brick
+end-volume
+
+volume remote3
+  type protocol/client
+  option transport-type tcp/client
+  option remote-port 9354
+  option remote-host 127.0.0.1
+  option remote-subvolume brick
+end-volume
+
+
+volume remote4
+  type protocol/client
+  option transport-type tcp/client
+  option remote-port 9355
+  option remote-host 127.0.0.1
+  option remote-subvolume brick
+end-volume
+
+
+
+volume stripe
+  type cluster/stripe
+  subvolumes remote1 remote2  remote3 remote4
+end-volume
+
+volume iocache
+
+    type performance/io-cache
+
+    option cache-size `grep 'MemTotal' /proc/meminfo  | awk '{print $2 * 0.2 / 1024}' | cut -f1 -d.`MB
+
+    option cache-timeout 1
+
+    subvolumes stripe
+
+end-volume
+
+volume writeback
+
+  type performance/write-behind
+
+  option aggregate-size 1MB
+
+  option window-size 2MB
+
+  option flush-behind off
+
+  subvolumes iocache
+
+end-volume
+
+
+
