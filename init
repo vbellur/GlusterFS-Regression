@@ -17,50 +17,41 @@
 #  <http://www.gnu.org/licenses/>.
 #
 set -u
-DESC=0
-BUGID=$(pwd | xargs dirname | xargs basename)
+# #BUGID=$(pwd | xargs dirname | xargs basename)
+
+# BUGID=$( | xargs dirname | xargs basename)
 
 function ok () 
 {
-  desc=$@
-  if [ $DESC -ne "0" ] 
-  then
-        echo "$BUGID: ok - $desc"
-  else
-        echo "$BUGID: ok"
-  fi
+        echo "ok"
+  
 }
 
 function not_ok () 
 {
-  desc=$@
-  if [ $DESC -ne "0" ]
-  then
-        echo "$BUGID: not ok - $desc"
-  else
-        echo "$BUGID: not ok"
-  fi
+        echo "not ok"
+  
 }
 
-[ $# -ne 1 ] && {
-  not_ok "#<Usage: $(basename $0) <complete_path_to_glusterfs>"
+[ $# -lt 1 ] && {
+  not_ok "#<Usage: $(basename $0) <complete_path_to_glusterd>"
   exit 
 }
 
-GLUSTERFS=$1
+GLUSTERD=$1
 
-VERSION_STR=`$GLUSTERFS --version`
+VERSION_STR=`$GLUSTERD --version`
 VERSION=`echo $VERSION_STR|cut -d " " -f 2`
 
 if [ "$VERSION" == "" ]
 then
-echo "Unable to determine version of $GLUSTERFS"
+echo "Unable to determine version of $GLUSTERD"
 exit 
 fi
 
 STARTDIR=$(pwd)
 LOGDIR=$PWD/logs/$VERSION
-GLUSTERFSDIR=`dirname $GLUSTERFS`
+GLUSTERFSDIR=`dirname $GLUSTERD`
 SPECDIR=$PWD/spec_files
 MOUNTDIR=$PWD/mnt
 EXPORTDIR=$PWD/export

@@ -1,0 +1,101 @@
+#!/bin/bash
+#
+#  Copyright (c) 2006-2009 Gluster, Inc. <http://www.gluster.com>
+#  This file is part of GlusterFS.
+#
+#  GlusterFS is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published
+#  by the Free Software Foundation; either version 3 of the License,
+#  or (at your option) any later version.
+#
+#  GlusterFS is distributed in the hope that it will be useful, but
+#  WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see
+#  <http://www.gnu.org/licenses/>.
+
+test_kill ()
+{
+    killall -9 glusterfs glusterfsd 2>/dev/null 1>/dev/null;
+    rm -rf /etc/glusterd/vols/*;
+    rm -rf /etc/glusterd/peers/*;
+}
+
+test_cleanup ()
+{
+    rm -rf /regression/export/*;
+}
+
+final_kill ()
+{
+    killall -9 glusterd 2>/dev/null 1>/dev/null;
+    rm -rf /etc/glusterd;
+}
+
+final_cleanup ()
+{
+    rm -rf /regression;
+}
+
+create_directory ()
+{
+    local directory=$1;
+
+    mkdir -p $directory;
+}
+
+check_glusterd_running ()
+{
+    local ret;
+
+    pgrep glusterd 2>/dev/null 1>/dev/null;
+    if [ $? -eq 0 ]; then
+        ret=22;
+    else
+        ret=0;
+    fi
+
+    return $ret;
+}
+
+start_glusterd ()
+{
+    local gluster_path=$1;
+
+    stat --printf=%i $gluster_path 2>&1 1>/dev/null;
+    if [ $? -ne 0 ]; then
+        echo "glusterfs is not present in the path $gluster_path";
+        return 22;
+    fi
+
+    $gluster_path;
+}
+
+run_testcase ()
+{
+    local id=;
+    if [ $# -eq 1 ]; then
+	id=$1;
+    fi
+
+    export global_bug_id=;
+
+    if [ $id ]; then
+        global_bug_id=$id;
+        if [ -f ./dvm/$id/testcase ]; then
+            ./dvm/$id/testcase $GLUSTERD;
+        fi
+        return 0;
+    fi
+
+    for i in $(ls dvm/ | grep "^[0-9]*$" | sort -n)
+    do
+        if [ -f ./dvm/$i/testcase ]; then
+            global_bug_id=$i;
+            run_testcase $i;
+        fi
+    done
+}

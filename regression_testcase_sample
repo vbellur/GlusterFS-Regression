@@ -19,15 +19,28 @@
 #  <http://www.gnu.org/licenses/>.
 
 
-source ../../init
-start_glusterfs
+source ./init
+source ./regression_helpers
+
+GLUSTERD_DIR=$(dirname $GLUSTERD);
+
+mkdir $EXPORT_DIR/$global_bug_id;
 
 #testcase starts here
+
+#Export directories should be from $EXPORT_DIR/$global_bug_id directory.
+
+#Mount point also should be from $EXPORT_DIR/$global_bug_id directory.
+
+#Starting the volume, mounting it and checking for the appropriate
+#functionality comprises the testcase.
 
 #This is my testcase
 
 #testcase ends here
 
-cleanup_glusterfs
+test_kill;
+
+test_cleanup;
 
 
