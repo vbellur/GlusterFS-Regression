@@ -1,8 +1,0 @@
-volume remote1
-  type protocol/client
-  option transport-type tcp
-  option remote-port 9362
-  option remote-host 127.0.0.1
-  option remote-subvolume brick
-end-volume
-

@@ -1,8 +1,0 @@
-# **** server1 spec file ****
-
-### Export volume "brick" with the contents of "/home/export" directory.
-volume posix1
-  type storage/posix                    # POSIX FS translator
-  option directory /home/raghu/work/regression.git/8/regr/export/export1        # Export this directory
-end-volume
-
